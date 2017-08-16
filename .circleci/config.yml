@@ -4,18 +4,11 @@ jobs:
   build:
     docker:
       - image: buildpack-deps:trusty
-      - image: circleci/node:7.10
 
     working_directory: ~/repo
 
     steps:
       - run: echo 'export PATH=/opt/qt55/bin/:$PATH' >> $BASH_ENV
-
-      - run:
-
-          name: update-npm
-
-          command: 'sudo npm install -g npm@latest'
 
       - checkout
 
@@ -25,8 +18,12 @@ jobs:
           sudo apt-get install -y software-properties-common
           sudo add-apt-repository -y ppa:beineri/opt-qt551-trusty
           sudo apt-get -qy update
-          sudo apt-get install -y node npm cmake qt55base qt55webkit mesa-common-dev libgl1-mesa-dev
+          sudo apt-get install -y curl cmake qt55base qt55webkit mesa-common-dev libgl1-mesa-dev
           echo "/opt/qt55/bin/qt55-env.sh" >> ~/.circlerc
+
+      - run: |
+          curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+          sudo apt-get install -y nodejs
           
       - run: qmake -version
 
