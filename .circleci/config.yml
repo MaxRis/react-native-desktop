@@ -19,7 +19,7 @@ jobs:
           #sudo apt-get update -y; true
           #sudo apt-get install -y qt55base qt55webkit
           #echo "/opt/qt55/bin/qt55-env.sh" >> ~/.circlerc
-          apt-get -y install cmake qt5-default qtdeclarative5-dev
+          sudo apt-get -y install cmake qt5-default qtdeclarative5-dev
 
       # Download and cache dependencies
       - restore_cache:
