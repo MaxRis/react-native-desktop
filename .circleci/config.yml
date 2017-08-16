@@ -21,7 +21,8 @@ jobs:
           sudo apt-get -qy update
           sudo apt-get install -y qt55base qt55webkit
           echo "/opt/qt55/bin/qt55-env.sh" >> ~/.circlerc
-          qmake -version
+          
+      - run: qmake -version
 
       # Build react-native-linux
       - run: |
