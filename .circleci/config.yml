@@ -21,6 +21,13 @@ jobs:
           #echo "/opt/qt55/bin/qt55-env.sh" >> ~/.circlerc
           sudo apt-get -y install cmake qt5-default qtdeclarative5-dev
 
+      # Build react-native-linux
+      - run: |
+          mkdir build
+          pushd build
+          cmake .. && make -j4
+          popd
+
       # Download and cache dependencies
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
