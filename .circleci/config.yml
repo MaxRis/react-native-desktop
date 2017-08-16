@@ -8,13 +8,10 @@ jobs:
       # specify the version you desire here
       - image: circleci/node:7.10
 
-    environment:
-      BASH_ENV: ~/.bashrc
-
     working_directory: ~/repo
 
     steps:
-      - run: echo 'export PATH=/opt/qt55/bin/qmake:$PATH' >> $BASH_ENV 
+      - run: echo 'export PATH=/opt/qt55/bin/qmake:$PATH' >> $BASH_ENV
 
       - checkout
 
