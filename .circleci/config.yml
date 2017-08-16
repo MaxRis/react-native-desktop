@@ -9,11 +9,13 @@ jobs:
       - image: circleci/node:7.10
 
     environment:
-      PATH: /opt/qt55/bin/qmake:$PATH
+      BASH_ENV: ~/.bashrc
 
     working_directory: ~/repo
 
     steps:
+      run: echo 'export PATH=/opt/qt55/bin/qmake:$PATH' >> $BASH_ENV 
+
       - checkout
 
       # Install and configure env with Qt
