@@ -27,17 +27,7 @@ protected:
 };
 
 QQuickItem* TestSliderProps::control() const {
-    QList<QQuickItem*> reactViewChilds = rootView()->childItems();
-    Q_ASSERT(reactViewChilds.count() == 1);
-
-    QQuickItem* view = reactViewChilds[0];
-    QList<QQuickItem*> viewChilds = view->childItems();
-    Q_ASSERT(viewChilds.count() == 1);
-
-    QQuickItem* slider = viewChilds[0];
-    Q_ASSERT(slider);
-
-    return slider;
+    return singleControl();
 }
 
 void TestSliderProps::initTestCase() {
