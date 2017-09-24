@@ -29,12 +29,14 @@ public:
     virtual QStringList customDirectEventTypes() override;
 
 public slots:
-    void sendSliderValueChangedToJs(QQuickItem* button);
-    void sendSlidingCompleteToJs(QQuickItem* button);
+    void sendSliderValueChangedToJs(QQuickItem* slider);
+    void sendSlidingCompleteToJs(QQuickItem* slider);
 
 private:
     virtual QString qmlComponentFile() const override;
     virtual void configureView(QQuickItem* view) const override;
+
+    QVariantList sliderValueEventArg(QQuickItem* slider, const QString& eventName) const;
 
 private:
     QScopedPointer<ReactSliderManagerPrivate> d_ptr;

@@ -27,6 +27,8 @@
 namespace {
 const QString EVENT_ON_VALUE_CHANGED = "onValueChange";
 const QString EVENT_ON_SLIDING_COMPLETE = "onSlidingComplete";
+
+const char SLIDER_VALUE_PROPERTY_NAME[] = "value";
 }
 
 class ReactSliderManagerPrivate {};
@@ -50,17 +52,18 @@ QStringList ReactSliderManager::customDirectEventTypes() {
     };
 }
 
-void ReactSliderManager::sendSliderValueChangedToJs(QQuickItem* button) {
-    int reactTag = ReactAttachedProperties::get(button)->tag();
-    bridge()->enqueueJSCall(
-        "RCTEventEmitter", "receiveEvent", QVariantList{reactTag, normalizeInputEventName(EVENT_ON_VALUE_CHANGED), {}});
+void ReactSliderManager::sendSliderValueChangedToJs(QQuickItem* slider) {
+    if (!slider)
+        return;
+    QVariantList args = sliderValueEventArg(slider, EVENT_ON_VALUE_CHANGED);
+    bridge()->enqueueJSCall("RCTEventEmitter", "receiveEvent", args);
 }
 
-void ReactSliderManager::sendSlidingCompleteToJs(QQuickItem* button) {
-    int reactTag = ReactAttachedProperties::get(button)->tag();
-    bridge()->enqueueJSCall("RCTEventEmitter",
-                            "receiveEvent",
-                            QVariantList{reactTag, normalizeInputEventName(EVENT_ON_SLIDING_COMPLETE), {}});
+void ReactSliderManager::sendSlidingCompleteToJs(QQuickItem* slider) {
+    if (!slider)
+        return;
+    QVariantList args = sliderValueEventArg(slider, EVENT_ON_SLIDING_COMPLETE);
+    bridge()->enqueueJSCall("RCTEventEmitter", "receiveEvent", args);
 }
 
 QString ReactSliderManager::qmlComponentFile() const {
@@ -74,6 +77,16 @@ void ReactSliderManager::configureView(QQuickItem* view) const {
         ReactFlexLayout::get(view)->setQmlImplicitWidth(true);
         ReactFlexLayout::get(view)->setQmlImplicitHeight(true);
     }
+}
+
+QVariantList ReactSliderManager::sliderValueEventArg(QQuickItem* slider, const QString& eventName) const {
+    if (!slider)
+        return QVariantList();
+
+    double sliderValue = slider->property(SLIDER_VALUE_PROPERTY_NAME).toDouble();
+    int reactTag = ReactAttachedProperties::get(slider)->tag();
+    return QVariantList{
+        reactTag, normalizeInputEventName(eventName), QVariantMap{{"target", reactTag}, {"value", sliderValue}}};
 }
 
 #include "reactslidermanager.moc"
