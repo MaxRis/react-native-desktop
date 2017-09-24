@@ -52,6 +52,8 @@ set(
   reactredboxitem.cpp
   reactexceptionsmanager.cpp
   reactscrollviewmanager.cpp
+  reactslider.cpp
+  reactslidermanager.cpp
   reactnavigatormanager.cpp
   reactactivityindicatormanager.cpp
   reactbuttonmanager.cpp
@@ -69,6 +71,7 @@ set(
   qml/ReactRawText.qml
   qml/ReactActivityIndicator.qml
   qml/ReactButton.qml
+  qml/ReactSlider.qml
 )
 
 if(DEFINED REACT_BUILD_STATIC_LIB)
