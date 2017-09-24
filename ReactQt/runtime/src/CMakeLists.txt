@@ -52,7 +52,6 @@ set(
   reactredboxitem.cpp
   reactexceptionsmanager.cpp
   reactscrollviewmanager.cpp
-  reactslider.cpp
   reactslidermanager.cpp
   reactnavigatormanager.cpp
   reactactivityindicatormanager.cpp

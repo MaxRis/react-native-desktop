@@ -45,7 +45,6 @@
 #include "reactrawtextmanager.h"
 #include "reactredboxitem.h"
 #include "reactscrollviewmanager.h"
-#include "reactslider.h"
 #include "reactslidermanager.h"
 #include "reacttestmodule.h"
 #include "reacttextmanager.h"
