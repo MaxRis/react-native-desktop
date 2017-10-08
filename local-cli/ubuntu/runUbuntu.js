@@ -90,4 +90,8 @@ function startServerInNewWindow() {
   child_process.spawn('gnome-terminal',['-e', packagerPath],{detached: true});
 }
 
-module.exports = runUbuntu;
+module.exports = {
+  name: 'run-ubuntu',
+  description: 'builds your app and starts it on your desktop Linux',
+  func: runUbuntu
+};
