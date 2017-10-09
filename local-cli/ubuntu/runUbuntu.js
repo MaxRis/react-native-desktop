@@ -51,7 +51,7 @@ function _runUbuntu(args, config) {
       } else {
         // result == 'not_running'
         console.log(chalk.bold('Starting JS server...'));
-        startServerInNewWindow();
+        startPackagerInNewWindow();
       }
       actuallyRun(args, reject);
     }));
@@ -85,9 +85,8 @@ function actuallyRun(args, reject) {
   }
 }
 
-function startServerInNewWindow() {
-  const packagerPath = path.resolve(__dirname, '..', '..', 'packager', 'packager.sh');
-  child_process.spawn('gnome-terminal',['-e', packagerPath],{detached: true});
+function startPackagerInNewWindow() {
+  child_process.spawn('gnome-terminal',['-e', 'npm start'],{detached: true});
 }
 
 module.exports = {
