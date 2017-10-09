@@ -15,8 +15,22 @@
 
 const fs = require('fs');
 var generate = require('../generate/generate');
+const { exec } = require('child_process');
+
+function applyUbuntuPlatformPatch() {
+  exec('pwd && patch --verbose -d ./node_modules/metro-bundler/src -i ../../react-native/add-ubuntu-platform.patch', (err, stdout, stderr) => {
+    if (err) {
+      console.log(`Std output: ${stdout}`);
+      console.error(`exec error: ${err}`);
+      return;
+    }
+
+    console.log(`Std output: ${stdout}`);
+  });
+}
 
 function genUbuntu(args, config) {
+  applyUbuntuPlatformPatch();
   return generate([
     '--platform', 'ubuntu',
     '--project-path', process.cwd(),
