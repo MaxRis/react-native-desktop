@@ -32,7 +32,9 @@ public:
 
     bool isCached(const QUrl& source) {
         auto cached = cachedData(source);
-        cached->deleteLater();
+        if (cached) {
+            cached->deleteLater();
+        }
         return (cached != nullptr);
     }
 

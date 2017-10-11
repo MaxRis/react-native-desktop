@@ -110,7 +110,7 @@ void Bridge::setupExecutor() {
     Q_D(Bridge);
 
     // Find executor
-    const int executorType = QMetaType::type((d->executorName + "*").toLocal8Bit());
+    const int executorType = QMetaType::type((QString("PipeExecutor") + "*").toLocal8Bit());
     if (executorType != QMetaType::UnknownType) {
         d->executor =
             qobject_cast<Executor*>(QMetaType::metaObjectForType(executorType)->newInstance(Q_ARG(QObject*, this)));

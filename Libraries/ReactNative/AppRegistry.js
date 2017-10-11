@@ -165,6 +165,7 @@ const AppRegistry = {
   },
 
   runApplication(appKey: string, appParameters: any): void {
+    console.log('12345678 runApplication called');
     const msg =
       'Running application "' + appKey + '" with appParams: ' +
       JSON.stringify(appParameters) + '. ' +

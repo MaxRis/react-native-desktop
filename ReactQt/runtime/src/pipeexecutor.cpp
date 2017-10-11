@@ -52,7 +52,7 @@ struct RegisterClass {
 class PipeExecutorPrivate : public QObject {
     Q_OBJECT
 public:
-    bool logErrors = false;
+    bool logErrors = true;
     QProcess* nodeProcess = nullptr;
     QStateMachine* machina = nullptr;
     QByteArray inputBuffer;
@@ -68,6 +68,8 @@ public:
         quint32 length = request.size();
         nodeProcess->write((const char*)&length, sizeof(length));
         nodeProcess->write(request.constData(), request.size());
+
+        nodeProcess->waitForBytesWritten();
     }
 
 public Q_SLOTS:
@@ -77,16 +79,25 @@ public Q_SLOTS:
             if (nodeProcess->bytesAvailable() < sizeof(length))
                 return;
             nodeProcess->read((char*)&length, sizeof(length));
+            qDebug() << "received response buffer size=" << length;
             inputBuffer.reserve(length);
         }
 
-        inputBuffer += nodeProcess->read(inputBuffer.capacity() - inputBuffer.size());
+        /*while (inputBuffer.size() < inputBuffer.capacity()) {
+            inputBuffer += nodeProcess->read(inputBuffer.capacity() - inputBuffer.size());
 
+            if (inputBuffer.size() < inputBuffer.capacity()) {
+                nodeProcess->waitForReadyRead();
+            }
+        }*/
+
+        inputBuffer += nodeProcess->read(inputBuffer.capacity() - inputBuffer.size());
         if (inputBuffer.size() < inputBuffer.capacity())
             return;
 
         Executor::ExecuteCallback callback = responseQueue.dequeue();
         if (callback) {
+            qDebug() << "New std ouput from node process: " << inputBuffer;
             QJsonDocument doc;
             if (inputBuffer != "undefined") {
                 doc = QJsonDocument::fromJson(inputBuffer);
@@ -126,7 +137,8 @@ PipeExecutor::PipeExecutor(QObject* parent) : Executor(parent), d_ptr(new PipeEx
     initialState->addTransition(d->nodeProcess, SIGNAL(started()), readyState);
     readyState->addTransition(d->nodeProcess, SIGNAL(error(QProcess::ProcessError)), errorState);
 
-    connect(initialState, &QAbstractState::entered, [=] { d->nodeProcess->start(); });
+    connect(
+        initialState, &QAbstractState::entered, [=] { d->nodeProcess->start(QIODevice::ReadWrite | QIODevice::Text); });
     connect(readyState, &QAbstractState::entered, [=] { d->processRequests(); });
     connect(errorState, &QAbstractState::entered, [=] { d->machina->stop(); });
 
