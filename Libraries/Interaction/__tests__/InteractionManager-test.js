@@ -293,7 +293,7 @@ describe('promise tasks', () => {
       expectToBeCalledOnce(task6);
 
       resolve();
-    }, 100);
+    }, 20000);
   };
 
   it('resolves async tasks recusively before other queued tasks', () => {
