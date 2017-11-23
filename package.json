@@ -117,6 +117,8 @@
     "ReactAndroid",
     "ReactCommon",
     "README.md",
+    "ExternalTestModule",
+    "ExternalTestModule2",
     "third-party-podspecs"
   ],
   "scripts": {
