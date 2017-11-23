@@ -74,6 +74,7 @@ public:
     QString pluginsPath = "./plugins";
     QMap<int, ModuleData*> modules;
     bool remoteJSDebugging = false;
+    QList<QObject*> externalModulesObj;
 
     QObjectList internalModules() {
         return QObjectList{new Timing,
@@ -313,6 +314,11 @@ void Bridge::setServerConnectionType(const QString& executorName) {
     d->serverConnectionType = executorName;
 }
 
+void Bridge::setExternalModules(const QList<QObject*> moduleList) {
+    Q_D(Bridge);
+    d->externalModulesObj = moduleList;
+}
+
 EventDispatcher* Bridge::eventDispatcher() const {
     return d_func()->eventDispatcher;
 }
@@ -383,6 +389,8 @@ void Bridge::initModules() {
     d->sourceCode->setScriptUrl(d->bundleUrl);
     connect(d->sourceCode, SIGNAL(sourceCodeChanged()), SLOT(sourcesFinished()));
     connect(d->sourceCode, SIGNAL(loadFailed()), SLOT(sourcesLoadFailed()));
+
+    modules.append(d->externalModulesObj);
 
     // XXX:
     for (QObject* o : modules) {

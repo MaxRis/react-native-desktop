@@ -85,6 +85,8 @@ public:
     QString serverConnectionType() const;
     void setServerConnectionType(const QString& serverConnectionType);
 
+    void setExternalModules(const QList<QObject*> moduleList);
+
     EventDispatcher* eventDispatcher() const;
     QList<ModuleData*> modules() const;
     UIManager* uiManager() const;

@@ -16,6 +16,16 @@ set(PROJECT_VERSION "0.0.1")
 include_directories(./React/Layout)
 enable_testing()
 
+message(STATUS "External modules dirs: ${EXTERNAL_MODULES_DIR}")
+
+#add_subdirectory(ExternalTestModule)
+#add_subdirectory(ExternalTestModule2)
+
+foreach(loop_var ${EXTERNAL_MODULES_DIR})
+  message(STATUS "loop_var: ${loop_var}")
+  add_subdirectory(${loop_var})
+endforeach(loop_var)
+
 add_subdirectory(ReactQt)
 add_subdirectory(Examples)
 add_subdirectory(RNTester)

@@ -35,6 +35,8 @@ var {
   View,
 } = ReactNative;
 
+var { ExternalTestModule, ExternalTestModule2 } = ReactNative.NativeModules;
+
 class Board {
   grid: Array<Array<number>>;
   turn: number;
@@ -225,7 +227,7 @@ var TicTacToeApp = createReactClass({
 
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>EXTREME T3</Text>
+        <Text style={styles.title}>EXTREME T3 {ExternalTestModule.sayHello}  {ExternalTestModule2.sayHello} </Text>
         <View style={styles.board}>
           {rows}
         </View>
