@@ -85,7 +85,8 @@ public:
     QString serverConnectionType() const;
     void setServerConnectionType(const QString& serverConnectionType);
 
-    void setExternalModules(const QList<QObject*> moduleList);
+    const QVariantList& externalModules() const;
+    void setExternalModules(const QVariantList& externalModules);
 
     EventDispatcher* eventDispatcher() const;
     QList<ModuleData*> modules() const;
@@ -107,6 +108,7 @@ private Q_SLOTS:
 private:
     void loadSource();
     void initModules();
+    void loadExternalModules(QObjectList* modules);
     void injectModules();
     void processResult(const QJsonDocument& document);
     void setupExecutor();

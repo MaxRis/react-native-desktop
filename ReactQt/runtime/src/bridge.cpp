@@ -45,6 +45,8 @@
 #include "testmodule.h"
 #include "timing.h"
 #include "uimanager.h"
+#include "utilities.h"
+
 #include <QDir>
 #include <QJsonDocument>
 #include <QMap>
@@ -74,7 +76,7 @@ public:
     QString pluginsPath = "./plugins";
     QMap<int, ModuleData*> modules;
     bool remoteJSDebugging = false;
-    QList<QObject*> externalModulesObj;
+    QVariantList externalModules;
 
     QObjectList internalModules() {
         return QObjectList{new Timing,
@@ -123,14 +125,8 @@ void Bridge::setupExecutor() {
 #endif // RCT_DEV
 
     if (!d->executor) {
-        ServerConnection* conn = nullptr;
-
-        const int connectionType = QMetaType::type((d->serverConnectionType + "*").toLocal8Bit());
-        if (connectionType != QMetaType::UnknownType) {
-            const QMetaObject* mObj = QMetaType::metaObjectForType(connectionType);
-            QObject* instance = mObj->newInstance();
-            conn = qobject_cast<ServerConnection*>(instance);
-        }
+        ServerConnection* conn =
+            qobject_cast<ServerConnection*>(utilities::createQObjectInstance(d->serverConnectionType + "*"));
 
         if (conn == nullptr) {
             qWarning() << __PRETTY_FUNCTION__ << "Could not construct connection: " << d->serverConnectionType
@@ -314,9 +310,13 @@ void Bridge::setServerConnectionType(const QString& executorName) {
     d->serverConnectionType = executorName;
 }
 
-void Bridge::setExternalModules(const QList<QObject*> moduleList) {
+const QVariantList& Bridge::externalModules() const {
+    return d_func()->externalModules;
+}
+
+void Bridge::setExternalModules(const QVariantList& externalModules) {
     Q_D(Bridge);
-    d->externalModulesObj = moduleList;
+    d->externalModules = externalModules;
 }
 
 EventDispatcher* Bridge::eventDispatcher() const {
@@ -390,7 +390,7 @@ void Bridge::initModules() {
     connect(d->sourceCode, SIGNAL(sourceCodeChanged()), SLOT(sourcesFinished()));
     connect(d->sourceCode, SIGNAL(loadFailed()), SLOT(sourcesLoadFailed()));
 
-    modules.append(d->externalModulesObj);
+    loadExternalModules(&modules);
 
     // XXX:
     for (QObject* o : modules) {
@@ -401,6 +401,22 @@ void Bridge::initModules() {
             d->modules.insert(moduleData->id(), moduleData);
         } else {
             qWarning() << "A module loader exported an invalid module";
+        }
+    }
+}
+
+void Bridge::loadExternalModules(QObjectList* modules) {
+    Q_D(Bridge);
+
+    if (modules == nullptr)
+        return;
+
+    foreach (QVariant moduleTypeName, d->externalModules) {
+        QObject* instance = utilities::createQObjectInstance(moduleTypeName.toString());
+        ModuleInterface* externalModule = dynamic_cast<ModuleInterface*>(instance);
+        if (instance && externalModule) {
+            externalModule->setBridge(this);
+            modules->append(instance);
         }
     }
 }

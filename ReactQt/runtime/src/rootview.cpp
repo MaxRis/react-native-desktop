@@ -84,8 +84,6 @@ public:
     Bridge* bridge = nullptr;
     RootView* q_ptr;
     bool remoteJSDebugging = false;
-    QVariantList externalModules;
-    QList<QObject*> externalModulesObj;
 
     RootViewPrivate(RootView* q) : q_ptr(q) {}
 
@@ -211,33 +209,14 @@ void RootView::setServerConnectionType(const QString& executor) {
 }
 
 QVariantList RootView::externalModules() const {
-    return d_func()->externalModules;
+    return d_func()->bridge->externalModules();
 }
 
 void RootView::setExternalModules(const QVariantList& externalModules) {
     Q_D(RootView);
-    if (d->externalModules == externalModules)
+    if (bridge()->externalModules() == externalModules)
         return;
-    d->externalModules = externalModules;
-
-    foreach (QVariant externalModule, d->externalModules) {
-        QString module = externalModule.toString();
-
-        // ServerConnection* conn = nullptr;
-
-        const int connectionType = QMetaType::type((module + "*").toLocal8Bit());
-        if (connectionType != QMetaType::UnknownType) {
-            const QMetaObject* mObj = QMetaType::metaObjectForType(connectionType);
-            QObject* instance = mObj->newInstance();
-            if (instance) {
-                d->externalModulesObj.append(instance);
-            }
-            // conn = qobject_cast<ServerConnection*>(instance);
-        }
-    }
-
-    bridge()->setExternalModules(d->externalModulesObj);
-
+    bridge()->setExternalModules(externalModules);
     Q_EMIT externalModulesChanged();
 }
 
