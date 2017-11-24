@@ -17,9 +17,13 @@ const path = require('path');
 const chalk = require('chalk');
 const fs = require('fs');
 const child_process = require('child_process');
+const util = require('util');
 
 
 function buildDesktop(args, dependencies) {
+  console.log("buildDesktop arg: " + args + " dependencies: " + dependencies);
+  var desktopExternalModules = _findDesktopExternalModules(args);
+  console.log("Found desktop external modules: " + desktopExternalModules);
   return _findModules(args).then((dependencies) => {
     return new Promise((resolve, reject) => {
       _findDesktopModules(args, dependencies, resolve, reject);
@@ -33,8 +37,14 @@ function buildDesktop(args, dependencies) {
       }
     });
   }).then(() => {
-    return _buildApplication(args);
+    return _buildApplication(args, desktopExternalModules);
   });
+}
+
+function _findDesktopExternalModules(args) {
+  var data = fs.readFileSync(path.join(args.root, 'package.json'));
+  console.log("_findDesktopExternalModules data: " + util.inspect(JSON.parse(data), {depth: null}));
+  return JSON.parse(data).desktopExternalModules;
 }
 
 function _findModules(args) {
@@ -43,6 +53,7 @@ function _findModules(args) {
       if (err) {
         reject(err);
       } else {
+        console.log("_findModules JSON data: " + util.inspect(JSON.parse(data), {depth: null}))
         resolve(JSON.parse(data).dependencies);
       }
     });
@@ -56,6 +67,7 @@ function _findDesktopModules(args, dependencies, resolve, reject) {
 
     return new Promise((resolve, reject) => {
       const depPath = path.join(args.root, 'node_modules', p);
+      console.log("DepPath: " + depPath);
       fs.readFile(path.join(depPath, 'package.json'), (err, data) => {
         const desktop = data && JSON.parse(data)._desktop;
         if (desktop !== undefined && desktop.hasOwnProperty('build')) {
@@ -99,17 +111,19 @@ function _buildModules(args, dependencies, resolve, reject) {
   });
 }
 
-function _buildApplication(args) {
+function _buildApplication(args, desktopExternalModules) {
   return new Promise((resolve, reject) => {
     console.log(chalk.bold('Building the app...'));
 
-    var buildCommand = './build.sh';
+    var buildCommand = './build.sh "' + desktopExternalModules.toString().replace(/,/g, ';') + '"';
     child_process.exec(buildCommand, {cwd: path.join(args.root, 'desktop')},
                         (error, stdout, stderr) => {
                           if (error)
                             reject(error);
-                          else
+                          else {
+                            console.log(stdout);
                             resolve();
+                          }
                         });
   });
 }
