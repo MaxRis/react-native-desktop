@@ -24,6 +24,6 @@ Rectangle {
     codeLocation: ReactNativeProperties.codeLocation
     pluginsPath: ReactNativeProperties.pluginsPath
     serverConnectionType: ReactNativeProperties.executor
-    externalModules: ["ExternalTestModule", "ExternalTestModule2"]
+    externalModules: [${EXTERNAL_MODULES}]
   }
 }
