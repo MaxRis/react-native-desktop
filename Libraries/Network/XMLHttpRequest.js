@@ -265,6 +265,7 @@ class XMLHttpRequest extends EventTarget(...XHR_EVENTS) {
 
   // exposed for testing
   __didCreateRequest(requestId: number): void {
+    console.log("__didCreateRequest is called with requestId: " + requestId);
     this._requestId = requestId;
 
     XMLHttpRequest._interceptor && XMLHttpRequest._interceptor.requestSent(
@@ -372,6 +373,7 @@ class XMLHttpRequest extends EventTarget(...XHR_EVENTS) {
     error: string,
     timeOutError: boolean
   ): void {
+    console.log("On __didCompleteResponse for requestID: " + requestId + "  should match to requestId : " + this._requestId);
     if (requestId === this._requestId) {
       if (error) {
         if (this._responseType === '' || this._responseType === 'text') {
@@ -391,10 +393,13 @@ class XMLHttpRequest extends EventTarget(...XHR_EVENTS) {
           requestId,
           error);
       } else {
+        console.log("On __didCompleteResponse All is fine, going to call loadingFinished");
         XMLHttpRequest._interceptor && XMLHttpRequest._interceptor.loadingFinished(
           requestId,
           this._response.length);
       }
+    } else {
+      console.log("Expected request ids doesn't match! SOmething is wrong");
     }
   }
 
@@ -497,6 +502,8 @@ class XMLHttpRequest extends EventTarget(...XHR_EVENTS) {
     if (this._responseType === 'arraybuffer' || this._responseType === 'blob') {
       nativeResponseType = 'base64';
     }
+
+    console.log("Listeners are added for network request!");
 
     invariant(this._method, 'Request method needs to be defined.');
     invariant(this._url, 'Request URL needs to be defined.');

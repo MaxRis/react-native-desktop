@@ -28,7 +28,8 @@ class Networking : public QObject, public ModuleInterface {
     Q_INTERFACES(ModuleInterface)
 
     Q_INVOKABLE void sendRequest(
-        int requestId, const QString& method, const QUrl& url, const QVariantMap& headers, const QByteArray& data);
+        const QString& method, const QUrl& url, const QVariantMap& data, const QVariantMap& headers, const QString& responseType,
+        bool incrementalUpdates, qlonglong timeout, bool withCredentials, double requestIdCallbackId);
     Q_INVOKABLE void abortRequest(int requestId);
 
     Q_DECLARE_PRIVATE(Networking);
