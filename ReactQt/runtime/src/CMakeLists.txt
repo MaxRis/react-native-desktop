@@ -68,6 +68,7 @@ set(
   communication/executor.cpp
   communication/websocketexecutor.cpp
   communication/iexecutor.h
+  websocketmodule.cpp
   ../../../ReactCommon/yoga/yoga/Yoga.c
   ../../../ReactCommon/yoga/yoga/YGEnums.c
   ../../../ReactCommon/yoga/yoga/YGNodeList.c

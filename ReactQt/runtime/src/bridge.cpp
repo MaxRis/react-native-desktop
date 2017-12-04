@@ -46,6 +46,7 @@
 #include "timing.h"
 #include "uimanager.h"
 #include "utilities.h"
+#include "websocketmodule.h"
 
 #include <QDir>
 #include <QJsonDocument>
@@ -98,7 +99,8 @@ public:
                            new ButtonManager,
                            new SliderManager,
                            new ModalManager,
-                           new PickerManager};
+                           new PickerManager,
+                           new WebSocketModule};
     }
 };
 
