@@ -43,8 +43,10 @@ public:
         QNetworkReply* reply = nam->get(request);
         qDebug() << "Send request!";
         QObject::connect(reply, &QNetworkReply::metaDataChanged, [=]() {
-            qDebug() << "QNetworkReply::metaDataChange: didReceiveNetworkResponse responseCode: " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() <<
-                " replyUrl: " << reply->url().toString() << " headersList: " << headerListToMap(reply->rawHeaderPairs());
+            qDebug() << "QNetworkReply::metaDataChange: didReceiveNetworkResponse responseCode: "
+                     << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()
+                     << " replyUrl: " << reply->url().toString()
+                     << " headersList: " << headerListToMap(reply->rawHeaderPairs());
             bridge->eventDispatcher()->sendDeviceEvent(
                 "didReceiveNetworkResponse",
                 QVariantList{requestId,
@@ -58,16 +60,15 @@ public:
             }
             QByteArray receivedData = reply->read(bytesReceived);
             qDebug() << "Received data: " << receivedData;
-            bridge->eventDispatcher()->sendDeviceEvent("didReceiveNetworkData",
-                                                       QVariantList{requestId, receivedData});
+            bridge->eventDispatcher()->sendDeviceEvent("didReceiveNetworkData", QVariantList{requestId, receivedData});
         });
         QObject::connect(reply, &QNetworkReply::finished, [=]() {
-            qDebug() << "NetworkingPrivate::handleGetRequest QNetworkReply::finished requestId: " << requestId << "error: " << reply->errorString();
+            qDebug() << "NetworkingPrivate::handleGetRequest QNetworkReply::finished requestId: " << requestId
+                     << "error: " << reply->errorString();
             reply->deleteLater();
             QByteArray receivedData = reply->readAll();
             qDebug() << "Received data size: " << receivedData.size();
-            bridge->eventDispatcher()->sendDeviceEvent("didReceiveNetworkData",
-                                                       QVariantList{requestId, receivedData});
+            bridge->eventDispatcher()->sendDeviceEvent("didReceiveNetworkData", QVariantList{requestId, receivedData});
             bridge->eventDispatcher()->sendDeviceEvent(
                 "didCompleteNetworkResponse",
                 QVariantList{requestId,
@@ -78,9 +79,15 @@ public:
     }
 };
 
-void Networking::sendRequest(
-    const QString& method, const QUrl& url, const QVariantMap& data, const QVariantMap& headers, const QString& responseType,
-    bool incrementalUpdates, qlonglong timeout, bool withCredentials, double requestIdCallbackId) {
+void Networking::sendRequest(const QString& method,
+                             const QUrl& url,
+                             const QVariantMap& data,
+                             const QVariantMap& headers,
+                             const QString& responseType,
+                             bool incrementalUpdates,
+                             qlonglong timeout,
+                             bool withCredentials,
+                             double requestIdCallbackId) {
     // qDebug() << __PRETTY_FUNCTION__ << method << url;
     Q_D(Networking);
 
@@ -94,9 +101,7 @@ void Networking::sendRequest(
 
     // TODO: data (post etc)
 
-    
-
-    if (method.compare("get", Qt::CaseInsensitive) == 0 || method == "unknown" ) {
+    if (method.compare("get", Qt::CaseInsensitive) == 0 || method == "unknown") {
         static int requestId = 0;
         ++requestId;
         d->bridge->invokePromiseCallback(requestIdCallbackId, QVariantList{requestId});

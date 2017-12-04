@@ -14,53 +14,93 @@
 #include <QDebug>
 
 #include "bridge.h"
+#include "eventdispatcher.h"
 #include "websocketmodule.h"
 
 class WebSocketModulePrivate {
 public:
     Bridge* bridge;
     QMap<qlonglong, QWebSocket*> sockets;
+    QMap<QWebSocket*, qlonglong> socketIds;
 };
 
-void WebSocketModule::connect(const QUrl &url, const QVariantList &protocols, const QVariantMap &options, qlonglong socketId)
-{
+void WebSocketModule::connect(const QUrl& url,
+                              const QVariantList& protocols,
+                              const QVariantMap& options,
+                              qlonglong socketId) {
     Q_D(WebSocketModule);
+
+    qDebug() << "WebSocketModule::connect with args: url: " << url << " socketId: " << socketId;
 
     QWebSocket* socket = new QWebSocket();
     d->sockets.insert(socketId, socket);
 
+    QObject::connect(socket, &QWebSocket::connected, [socket, socketId, this]() {
+        qDebug() << "Socket connected. SocketId:" << socketId;
 
-    QObject::connect(socket, &QWebSocket::connected, [=]() {
-        qDebug() << "Socket connected!";
+        this->d_ptr->bridge->eventDispatcher()->sendDeviceEvent("websocketOpen", QVariantMap{{"id", socketId}});
+    });
+
+    QObject::connect(socket, &QWebSocket::disconnected, [socket, socketId, this]() {
+        qDebug() << "Socket connected. SocketId:" << socketId;
+        this->d_ptr->bridge->eventDispatcher()->sendDeviceEvent(
+            "websocketClosed",
+            QVariantMap{
+                {"id", socketId}, {"code", socket->closeCode()}, {"reason", socket->closeReason()}, {"clean", ""}});
+    });
+
+    QObject::connect(socket, &QWebSocket::textMessageReceived, [socket, socketId, this](const QString& message) {
+        qDebug() << QString("Text message %1 received for SocketId").arg(message).arg(socketId);
+        this->d_ptr->bridge->eventDispatcher()->sendDeviceEvent(
+            "websocketMessage", QVariantMap{{"id", socketId}, {"type", "text"}, {"data", message}});
+    });
+
+    QObject::connect(socket, &QWebSocket::binaryMessageReceived, [socket, socketId, this](const QByteArray& message) {
+        qDebug() << QString("Binary message of size %1 received for SocketId").arg(message.size()).arg(socketId);
+        this->d_ptr->bridge->eventDispatcher()->sendDeviceEvent(
+            "websocketMessage", QVariantMap{{"id", socketId}, {"type", "binary"}, {"data", message}});
     });
 
     QObject::connect(socket,
-            static_cast<void (QWebSocket::*)(QAbstractSocket::SocketError)>(&QWebSocket::error),
-            [=](QAbstractSocket::SocketError) { qDebug() << socket->errorString(); });
-
+                     static_cast<void (QWebSocket::*)(QAbstractSocket::SocketError)>(&QWebSocket::error),
+                     [=](QAbstractSocket::SocketError) { qDebug() << socket->errorString(); });
 
     socket->open(url);
-
 }
 
-void WebSocketModule::send(const QString &message, qlonglong socketId)
-{
-
+void WebSocketModule::send(const QString& message, qlonglong socketId) {
+    qDebug() << "WebSocketModule::send with args: message: " << message << " socketId: " << socketId;
+    Q_D(WebSocketModule);
+    if (d->sockets.contains(socketId)) {
+        d->sockets[socketId]->sendTextMessage(message);
+        d->sockets[socketId]->flush();
+    }
 }
 
-void WebSocketModule::sendBinary(const QString &base64String, qlonglong socketId)
-{
-
+void WebSocketModule::sendBinary(const QString& base64String, qlonglong socketId) {
+    qDebug() << "WebSocketModule::sendBinary with args: base64String: " << base64String << " socketId: " << socketId;
+    Q_D(WebSocketModule);
+    if (d->sockets.contains(socketId)) {
+        d->sockets[socketId]->sendBinaryMessage(base64String.toLocal8Bit());
+        d->sockets[socketId]->flush();
+    }
 }
 
-void WebSocketModule::ping(qlonglong socketId)
-{
-
+void WebSocketModule::ping(qlonglong socketId) {
+    qDebug() << "WebSocketModule::ping with args: socketId: " << socketId;
+    Q_D(WebSocketModule);
+    if (d->sockets.contains(socketId)) {
+        d->sockets[socketId]->ping();
+        d->sockets[socketId]->flush();
+    }
 }
 
-void WebSocketModule::close(qlonglong socketId)
-{
-
+void WebSocketModule::close(qlonglong socketId) {
+    qDebug() << "WebSocketModule::ping with args: socketId: " << socketId;
+    Q_D(WebSocketModule);
+    if (d->sockets.contains(socketId)) {
+        d->sockets[socketId]->close();
+    }
 }
 
 WebSocketModule::WebSocketModule(QObject* parent) : QObject(parent), d_ptr(new WebSocketModulePrivate) {
