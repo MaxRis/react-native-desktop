@@ -354,7 +354,20 @@ void Bridge::setRemoteJSDebugging(bool value) {
 
 void Bridge::sourcesFinished() {
     Q_D(Bridge);
-    QTimer::singleShot(0, [=] { d->executor->executeApplicationScript(d->sourceCode->sourceCode(), d->bundleUrl); });
+    QTimer::singleShot(0, [=] {
+        d->executor->executeApplicationScript(d->sourceCode->sourceCode(), d->bundleUrl);
+        d_func()->executor->executeJSCall("callFunctionReturnFlushedQueue",
+                                          QVariantList{"HMRClient",
+                                                       "enable",
+                                                       QVariantList{"desktop",
+                                                                    d->sourceCode->scriptUrl().path().mid(1),
+                                                                    d->sourceCode->scriptUrl().host(),
+                                                                    d->sourceCode->scriptUrl().port(0)}},
+                                          [=](const QJsonDocument& doc) {
+                                              qDebug() << "Enabling HMRClient response";
+                                              processResult(doc);
+                                          });
+    });
 }
 
 void Bridge::sourcesLoadFailed() {
