@@ -97,9 +97,8 @@ void SourceCode::loadSource(QNetworkAccessManager* nam) {
     QNetworkRequest request(d->scriptUrl);
     QNetworkReply* reply = nam->get(request);
     QObject::connect(reply, &QNetworkReply::finished, [=]() {
-
+        reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            reply->deleteLater();
             if (d->retryAttempts < d->retryCount) {
                 d->retryAttempts++;
                 d->retryTimeout *= 2;
@@ -113,7 +112,6 @@ void SourceCode::loadSource(QNetworkAccessManager* nam) {
         d->sourceCode = reply->readAll();
         d->retryAttempts = 0;
         d->retryTimeout = 250;
-        reply->deleteLater();
         Q_EMIT sourceCodeChanged();
     });
 }

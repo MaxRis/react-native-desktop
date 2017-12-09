@@ -40,7 +40,6 @@ public:
 
     void setBridge(Bridge* bridge) override;
 
-    // TODO: this doesnt seem right
     ViewManager* viewManager() override;
 
     QString moduleName() override;

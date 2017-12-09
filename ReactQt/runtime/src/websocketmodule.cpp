@@ -21,7 +21,53 @@ class WebSocketModulePrivate {
 public:
     Bridge* bridge;
     QMap<qlonglong, QWebSocket*> sockets;
-    QMap<QWebSocket*, qlonglong> socketIds;
+
+    void createSocketConnection(const QUrl& url, qlonglong socketId) {
+        QWebSocket* socket = new QWebSocket();
+        sockets.insert(socketId, socket);
+
+        QObject::connect(socket, &QWebSocket::connected, [=]() {
+            qDebug() << "Socket connected. SocketId:" << socketId;
+            if (bridge) {
+                bridge->eventDispatcher()->sendDeviceEvent("websocketOpen", QVariantMap{{"id", socketId}});
+            }
+        });
+
+        QObject::connect(socket, &QWebSocket::disconnected, [=]() {
+            sockets.remove(socketId);
+            socket->deleteLater();
+            qDebug() << "Socket disconnected. SocketId:" << socketId;
+            if (bridge) {
+                bridge->eventDispatcher()->sendDeviceEvent("websocketClosed",
+                                                           QVariantMap{{"id", socketId},
+                                                                       {"code", socket->closeCode()},
+                                                                       {"reason", socket->closeReason()},
+                                                                       {"clean", ""}});
+            }
+        });
+
+        QObject::connect(socket, &QWebSocket::textMessageReceived, [=](const QString& message) {
+            qDebug() << QString("Text message %1 received for SocketId").arg(message).arg(socketId);
+            if (bridge) {
+                bridge->eventDispatcher()->sendDeviceEvent(
+                    "websocketMessage", QVariantMap{{"id", socketId}, {"type", "text"}, {"data", message}});
+            }
+        });
+
+        QObject::connect(socket, &QWebSocket::binaryMessageReceived, [=](const QByteArray& message) {
+            qDebug() << QString("Binary message of size %1 received for SocketId").arg(message.size()).arg(socketId);
+            if (bridge) {
+                bridge->eventDispatcher()->sendDeviceEvent(
+                    "websocketMessage", QVariantMap{{"id", socketId}, {"type", "binary"}, {"data", message}});
+            }
+        });
+
+        QObject::connect(socket,
+                         static_cast<void (QWebSocket::*)(QAbstractSocket::SocketError)>(&QWebSocket::error),
+                         [=](QAbstractSocket::SocketError) { qDebug() << socket->errorString(); });
+
+        socket->open(url);
+    }
 };
 
 void WebSocketModule::connect(const QUrl& url,
@@ -31,50 +77,7 @@ void WebSocketModule::connect(const QUrl& url,
     Q_D(WebSocketModule);
 
     qDebug() << "WebSocketModule::connect with args: url: " << url << " socketId: " << socketId;
-
-    QWebSocket* socket = new QWebSocket();
-    d->sockets.insert(socketId, socket);
-
-    QObject::connect(socket, &QWebSocket::connected, [socket, socketId, this]() {
-        qDebug() << "Socket connected. SocketId:" << socketId;
-        if (this->d_ptr->bridge) {
-            this->d_ptr->bridge->eventDispatcher()->sendDeviceEvent("websocketOpen", QVariantMap{{"id", socketId}});
-        }
-    });
-
-    QObject::connect(socket, &QWebSocket::disconnected, [socket, socketId, this]() {
-        this->d_ptr->sockets.remove(socketId);
-        socket->deleteLater();
-        qDebug() << "Socket disconnected. SocketId:" << socketId;
-        if (this->d_ptr->bridge) {
-            this->d_ptr->bridge->eventDispatcher()->sendDeviceEvent(
-                "websocketClosed",
-                QVariantMap{
-                    {"id", socketId}, {"code", socket->closeCode()}, {"reason", socket->closeReason()}, {"clean", ""}});
-        }
-    });
-
-    QObject::connect(socket, &QWebSocket::textMessageReceived, [socket, socketId, this](const QString& message) {
-        qDebug() << QString("Text message %1 received for SocketId").arg(message).arg(socketId);
-        if (this->d_ptr->bridge) {
-            this->d_ptr->bridge->eventDispatcher()->sendDeviceEvent(
-                "websocketMessage", QVariantMap{{"id", socketId}, {"type", "text"}, {"data", message}});
-        }
-    });
-
-    QObject::connect(socket, &QWebSocket::binaryMessageReceived, [socket, socketId, this](const QByteArray& message) {
-        qDebug() << QString("Binary message of size %1 received for SocketId").arg(message.size()).arg(socketId);
-        if (this->d_ptr->bridge) {
-            this->d_ptr->bridge->eventDispatcher()->sendDeviceEvent(
-                "websocketMessage", QVariantMap{{"id", socketId}, {"type", "binary"}, {"data", message}});
-        }
-    });
-
-    QObject::connect(socket,
-                     static_cast<void (QWebSocket::*)(QAbstractSocket::SocketError)>(&QWebSocket::error),
-                     [=](QAbstractSocket::SocketError) { qDebug() << socket->errorString(); });
-
-    socket->open(url);
+    d->createSocketConnection(url, socketId);
 }
 
 void WebSocketModule::send(const QString& message, qlonglong socketId) {

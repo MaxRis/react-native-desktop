@@ -85,6 +85,7 @@ public:
     Bridge* bridge = nullptr;
     RootView* q_ptr;
     bool remoteJSDebugging = false;
+    QNetworkReply* liveReloadUrlReply = nullptr;
 
     RootViewPrivate(RootView* q) : q_ptr(q) {}
 
@@ -94,25 +95,33 @@ public:
             return;
         }
 
-        QNetworkRequest request(codeLocation.resolved(QUrl("/onchange")));
-        QNetworkReply* reply = qmlEngine(q_ptr)->networkAccessManager()->get(request);
-        QObject::connect(reply, &QNetworkReply::finished, [=] {
-            reply->deleteLater();
-            if (reply->error() != QNetworkReply::NoError) {
-                qCritical() << __PRETTY_FUNCTION__ << "Error monitoring change url";
-                return;
-            }
+        if (!liveReloadUrlReply) {
+            QNetworkRequest request(codeLocation.resolved(QUrl("/onchange")));
+            liveReloadUrlReply = qmlEngine(q_ptr)->networkAccessManager()->get(request);
+            QObject::connect(liveReloadUrlReply, &QNetworkReply::finished, [=] {
+                QNetworkReply::NetworkError replyError = liveReloadUrlReply->error();
+                int replyStatusCode = liveReloadUrlReply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+                liveReloadUrlReply->deleteLater();
+                liveReloadUrlReply = nullptr;
+                if (replyError != QNetworkReply::NoError) {
+                    qCritical() << __PRETTY_FUNCTION__ << "Error monitoring change url";
+                    return;
+                }
 
-            if (!liveReload)
-                return;
+                qDebug() << "/onchange live reload reply received!!!";
 
-            if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 205) {
-                bridge->reload();
-            }
-            if (bridge->ready()) {
-                monitorChangeUrl();
-            }
-        });
+                if (!liveReload)
+                    return;
+
+                if (replyStatusCode == 205) {
+                    bridge->reload();
+                }
+
+                if (bridge->ready()) {
+                    monitorChangeUrl();
+                }
+            });
+        }
     }
 
 private Q_SLOTS:
