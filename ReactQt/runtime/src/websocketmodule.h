@@ -25,7 +25,8 @@ class WebSocketModule : public QObject, public ModuleInterface {
     // Q_PLUGIN_METADATA(IID ReactModuleInterface_IID)
     Q_INTERFACES(ModuleInterface)
 
-    Q_INVOKABLE void connect(const QUrl& url, const QVariantList& protocols, const QVariantMap& options, qlonglong socketId);
+    Q_INVOKABLE void
+    connect(const QUrl& url, const QVariantList& protocols, const QVariantMap& options, qlonglong socketId);
     Q_INVOKABLE void send(const QString& message, qlonglong socketId);
     Q_INVOKABLE void sendBinary(const QString& base64String, qlonglong socketId);
     Q_INVOKABLE void ping(qlonglong socketId);
