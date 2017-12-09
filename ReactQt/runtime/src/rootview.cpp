@@ -76,6 +76,7 @@ class RootViewPrivate : public QObject {
     Q_DECLARE_PUBLIC(RootView)
 public:
     bool liveReload = false;
+    bool hotReload = false;
     QString moduleName;
     QUrl codeLocation;
     QVariantMap properties;
@@ -152,6 +153,22 @@ void RootView::setLiveReload(bool liveReload) {
 
     d->liveReload = liveReload;
     emit liveReloadChanged();
+}
+
+bool RootView::hotReload() const {
+    return d_func()->hotReload;
+}
+
+void RootView::setHotReload(bool hotReload) {
+    Q_D(RootView);
+    if (d->hotReload == hotReload)
+        return;
+
+    d->hotReload = hotReload;
+    emit hotReloadChanged();
+
+    d->bridge->setHotReload(hotReload);
+    d->bridge->reload();
 }
 
 QString RootView::moduleName() const {

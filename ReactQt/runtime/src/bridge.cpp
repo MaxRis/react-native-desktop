@@ -77,6 +77,7 @@ public:
     QString pluginsPath = "./plugins";
     QMap<int, ModuleData*> modules;
     bool remoteJSDebugging = false;
+    bool hotReload = false;
     QVariantList externalModules;
 
     QObjectList internalModules() {
@@ -352,21 +353,27 @@ void Bridge::setRemoteJSDebugging(bool value) {
     d_func()->remoteJSDebugging = value;
 }
 
+void Bridge::setHotReload(bool value) {
+    d_func()->hotReload = value;
+}
+
 void Bridge::sourcesFinished() {
     Q_D(Bridge);
     QTimer::singleShot(0, [=] {
         d->executor->executeApplicationScript(d->sourceCode->sourceCode(), d->bundleUrl);
-        d_func()->executor->executeJSCall("callFunctionReturnFlushedQueue",
-                                          QVariantList{"HMRClient",
-                                                       "enable",
-                                                       QVariantList{"desktop",
-                                                                    d->sourceCode->scriptUrl().path().mid(1),
-                                                                    d->sourceCode->scriptUrl().host(),
-                                                                    d->sourceCode->scriptUrl().port(0)}},
-                                          [=](const QJsonDocument& doc) {
-                                              qDebug() << "Enabling HMRClient response";
-                                              processResult(doc);
-                                          });
+        if (d_func()->hotReload) {
+            d_func()->executor->executeJSCall("callFunctionReturnFlushedQueue",
+                                              QVariantList{"HMRClient",
+                                                           "enable",
+                                                           QVariantList{"desktop",
+                                                                        d->sourceCode->scriptUrl().path().mid(1),
+                                                                        d->sourceCode->scriptUrl().host(),
+                                                                        d->sourceCode->scriptUrl().port(0)}},
+                                              [=](const QJsonDocument& doc) {
+                                                  qDebug() << "Enabling HMRClient response";
+                                                  processResult(doc);
+                                              });
+        }
     });
 }
 

@@ -37,28 +37,37 @@ void WebSocketModule::connect(const QUrl& url,
 
     QObject::connect(socket, &QWebSocket::connected, [socket, socketId, this]() {
         qDebug() << "Socket connected. SocketId:" << socketId;
-
-        this->d_ptr->bridge->eventDispatcher()->sendDeviceEvent("websocketOpen", QVariantMap{{"id", socketId}});
+        if (this->d_ptr->bridge) {
+            this->d_ptr->bridge->eventDispatcher()->sendDeviceEvent("websocketOpen", QVariantMap{{"id", socketId}});
+        }
     });
 
     QObject::connect(socket, &QWebSocket::disconnected, [socket, socketId, this]() {
-        qDebug() << "Socket connected. SocketId:" << socketId;
-        this->d_ptr->bridge->eventDispatcher()->sendDeviceEvent(
-            "websocketClosed",
-            QVariantMap{
-                {"id", socketId}, {"code", socket->closeCode()}, {"reason", socket->closeReason()}, {"clean", ""}});
+        this->d_ptr->sockets.remove(socketId);
+        socket->deleteLater();
+        qDebug() << "Socket disconnected. SocketId:" << socketId;
+        if (this->d_ptr->bridge) {
+            this->d_ptr->bridge->eventDispatcher()->sendDeviceEvent(
+                "websocketClosed",
+                QVariantMap{
+                    {"id", socketId}, {"code", socket->closeCode()}, {"reason", socket->closeReason()}, {"clean", ""}});
+        }
     });
 
     QObject::connect(socket, &QWebSocket::textMessageReceived, [socket, socketId, this](const QString& message) {
         qDebug() << QString("Text message %1 received for SocketId").arg(message).arg(socketId);
-        this->d_ptr->bridge->eventDispatcher()->sendDeviceEvent(
-            "websocketMessage", QVariantMap{{"id", socketId}, {"type", "text"}, {"data", message}});
+        if (this->d_ptr->bridge) {
+            this->d_ptr->bridge->eventDispatcher()->sendDeviceEvent(
+                "websocketMessage", QVariantMap{{"id", socketId}, {"type", "text"}, {"data", message}});
+        }
     });
 
     QObject::connect(socket, &QWebSocket::binaryMessageReceived, [socket, socketId, this](const QByteArray& message) {
         qDebug() << QString("Binary message of size %1 received for SocketId").arg(message.size()).arg(socketId);
-        this->d_ptr->bridge->eventDispatcher()->sendDeviceEvent(
-            "websocketMessage", QVariantMap{{"id", socketId}, {"type", "binary"}, {"data", message}});
+        if (this->d_ptr->bridge) {
+            this->d_ptr->bridge->eventDispatcher()->sendDeviceEvent(
+                "websocketMessage", QVariantMap{{"id", socketId}, {"type", "binary"}, {"data", message}});
+        }
     });
 
     QObject::connect(socket,
@@ -107,7 +116,15 @@ WebSocketModule::WebSocketModule(QObject* parent) : QObject(parent), d_ptr(new W
     Q_D(WebSocketModule);
 }
 
-WebSocketModule::~WebSocketModule() {}
+WebSocketModule::~WebSocketModule() {
+    Q_D(WebSocketModule);
+    d->bridge = nullptr;
+    foreach (QWebSocket* websocket, d->sockets.values()) {
+        websocket->close();
+        websocket->disconnect();
+        websocket->deleteLater();
+    }
+}
 
 void WebSocketModule::setBridge(Bridge* bridge) {
     Q_D(WebSocketModule);
