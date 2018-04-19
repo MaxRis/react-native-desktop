@@ -51,6 +51,8 @@
 #include "utilities.h"
 #include "websocketmodule.h"
 
+#include "cxxreact/Instance.h"
+
 #include <QDir>
 #include <QJsonDocument>
 #include <QMap>
@@ -59,7 +61,104 @@
 #include <QPluginLoader>
 #include <QQuickItem>
 #include <QStandardPaths>
+#include <QThread>
 #include <QTimer>
+
+using namespace facebook::react;
+
+#include "cxxreact/JSBigString.h"
+#include <cxxreact/MessageQueueThread.h>
+
+typedef std::function<void(QString error)> RCTJavaScriptCompleteBlock;
+typedef std::function<void(int result, QString error)> RCTJavaScriptCallback;
+
+namespace facebook {
+namespace react {
+
+class RCTMessageThread : public QObject, public MessageQueueThread {
+    Q_OBJECT
+public:
+    RCTMessageThread(RCTJavaScriptCompleteBlock errorBlock);
+    ~RCTMessageThread() override;
+    void runOnQueue(std::function<void()>&&) override;
+    void runOnQueueSync(std::function<void()>&&) override;
+    void quitSynchronous() override;
+    void setRunLoop();
+
+Q_SIGNALS:
+    void sheduleRun(std::function<void()>);
+
+private Q_SLOTS:
+    void execFunc(std::function<void()>);
+
+private:
+    void tryFunc(const std::function<void()>& func);
+    void runAsync(std::function<void()> func);
+    void runSync(std::function<void()> func);
+
+    std::atomic_bool m_shutdown;
+    QThread m_thread;
+};
+
+RCTMessageThread::RCTMessageThread(RCTJavaScriptCompleteBlock errorBlock) : m_shutdown(false) {
+    qRegisterMetaType<std::function<void()>>("std::function<void()>");
+    this->moveToThread(&m_thread);
+
+    connect(this, &RCTMessageThread::sheduleRun, this, &RCTMessageThread::execFunc, Qt::QueuedConnection);
+    m_thread.start();
+}
+
+RCTMessageThread::~RCTMessageThread() {}
+
+// This is analogous to dispatch_async
+void RCTMessageThread::runAsync(std::function<void()> func) {}
+
+// This is analogous to dispatch_sync
+void RCTMessageThread::runSync(std::function<void()> func) {}
+
+void RCTMessageThread::tryFunc(const std::function<void()>& func) {}
+
+void RCTMessageThread::execFunc(std::function<void()> func) {
+    func();
+}
+
+void RCTMessageThread::runOnQueue(std::function<void()>&& func) {
+    if (m_shutdown) {
+        return;
+    }
+
+    emit sheduleRun(func);
+}
+
+void RCTMessageThread::runOnQueueSync(std::function<void()>&& func) {
+    if (m_shutdown) {
+        return;
+    }
+
+    func();
+}
+
+void RCTMessageThread::quitSynchronous() {
+    m_shutdown = true;
+}
+
+void RCTMessageThread::setRunLoop() {}
+}
+}
+
+struct RCTInstanceCallback : public InstanceCallback {
+    Bridge* bridge_;
+    RCTInstanceCallback(Bridge* bridge) : bridge_(bridge) {}
+    void onBatchComplete() override {
+        // There's no interface to call this per partial batch
+        bridge_->partialBatchDidFlush();
+        bridge_->batchDidComplete();
+    }
+};
+
+void Bridge::partialBatchDidFlush() {}
+
+void Bridge::batchDidComplete() {}
 
 class BridgePrivate {
 public:
@@ -82,6 +181,13 @@ public:
     bool remoteJSDebugging = false;
     bool hotReload = false;
     QVariantList externalModules;
+
+    bool useJSC = true;
+
+    std::shared_ptr<RCTMessageThread> _jsMessageThread;
+
+    // This is uniquely owned, but weak_ptr is used.
+    std::shared_ptr<Instance> _reactInstance;
 
     QObjectList internalModules() {
         return QObjectList{new Timing,
@@ -153,10 +259,48 @@ void Bridge::setupExecutor() {
 void Bridge::init() {
     Q_D(Bridge);
 
-    setupExecutor();
-    initModules();
-    injectModules();
-    loadSource();
+    if (!d->useJSC) {
+        setupExecutor();
+        initModules();
+        injectModules();
+        loadSource();
+    } else {
+        d->sourceCode = new SourceCode;
+
+        // XXX:
+        d->sourceCode->setScriptUrl(d->bundleUrl);
+        connect(d->sourceCode, SIGNAL(sourceCodeChanged()), SLOT(sourcesFinished()));
+        connect(d->sourceCode, SIGNAL(loadFailed()), SLOT(sourcesLoadFailed()));
+
+        std::shared_ptr<JSExecutorFactory> executorFactory;
+        executorFactory.reset(new JSCExecutorFactory(folly::dynamic::object("OwnerIdentity", "ReactNative")(
+            "AppIdentity", "RNTesterApp")("DeviceIdentity", "unknown")("UseCustomJSC", false)));
+
+        d->_jsMessageThread = std::make_shared<RCTMessageThread>([=](QString error) {
+            if (error.isEmpty()) {
+            }
+        });
+
+        std::shared_ptr<ModuleRegistry> moduleRegistry;
+        // std::vector<std::unique_ptr<NativeModule>> modules_;
+        moduleRegistry.reset(
+            new ModuleRegistry(std::vector<std::unique_ptr<NativeModule>>(), [=](const std::string& name) {
+                qDebug() << "!!!! Native module not found! : " << name.c_str();
+                return false;
+            }));
+
+        initModules();
+        moduleRegistry->registerModules(d->modules.values());
+
+        d->_reactInstance.reset(new Instance);
+
+        d->_jsMessageThread->runOnQueue([=] {
+            d->_reactInstance->initializeBridge(
+                std::make_unique<RCTInstanceCallback>(this), executorFactory, d->_jsMessageThread, moduleRegistry);
+        });
+
+        loadSource();
+    }
 }
 
 void Bridge::reload() {
@@ -183,11 +327,16 @@ void Bridge::loadBundle(const QUrl& bundleUrl) {
 }
 
 void Bridge::enqueueJSCall(const QString& module, const QString& method, const QVariantList& args) {
-    if (!d_func()->executor)
-        return;
-    d_func()->executor->executeJSCall("callFunctionReturnFlushedQueue",
-                                      QVariantList{module, method, args},
-                                      [=](const QJsonDocument& doc) { processResult(doc); });
+    if (d_func()->useJSC) {
+        d_func()->_reactInstance->callJSFunction(
+            module.toStdString(), method.toStdString(), utilities::qvariantToDynamic(args));
+    } else {
+        if (!d_func()->executor)
+            return;
+        d_func()->executor->executeJSCall("callFunctionReturnFlushedQueue",
+                                          QVariantList{module, method, args},
+                                          [=](const QJsonDocument& doc) { processResult(doc); });
+    }
 }
 
 void Bridge::invokePromiseCallback(double callbackCode, const QVariantList& args) {
@@ -209,14 +358,20 @@ void Bridge::executeSourceCode(const QByteArray& sourceCode) {
 }
 
 void Bridge::enqueueRunAppCall(const QVariantList& args) {
-    if (!d_func()->executor)
-        return;
-    d_func()->executor->executeJSCall("callFunctionReturnFlushedQueue",
-                                      QVariantList{"AppRegistry", "runApplication", args},
-                                      [=](const QJsonDocument& doc) {
-                                          processResult(doc);
-                                          setJsAppStarted(true);
-                                      });
+    if (d_func()->useJSC) {
+        d_func()->_reactInstance->callJSFunction("AppRegistry", "runApplication", utilities::qvariantToDynamic(args));
+
+    } else {
+        if (!d_func()->executor)
+            return;
+
+        d_func()->executor->executeJSCall("callFunctionReturnFlushedQueue",
+                                          QVariantList{"AppRegistry", "runApplication", args},
+                                          [=](const QJsonDocument& doc) {
+                                              processResult(doc);
+                                              setJsAppStarted(true);
+                                          });
+    }
 }
 
 bool Bridge::ready() const {
@@ -366,19 +521,31 @@ void Bridge::setHotReload(bool value) {
 void Bridge::sourcesFinished() {
     Q_D(Bridge);
     QTimer::singleShot(0, [=] {
-        d->executor->executeApplicationScript(d->sourceCode->sourceCode(), d->bundleUrl);
-        if (d_func()->hotReload) {
-            d_func()->executor->executeJSCall("callFunctionReturnFlushedQueue",
-                                              QVariantList{"HMRClient",
-                                                           "enable",
-                                                           QVariantList{"desktop",
-                                                                        d->sourceCode->scriptUrl().path().mid(1),
-                                                                        d->sourceCode->scriptUrl().host(),
-                                                                        d->sourceCode->scriptUrl().port(0)}},
-                                              [=](const QJsonDocument& doc) {
-                                                  qDebug() << "Enabling HMRClient response";
-                                                  processResult(doc);
-                                              });
+        if (!d->useJSC) {
+            d->executor->executeApplicationScript(d->sourceCode->sourceCode(), d->bundleUrl);
+            if (d_func()->hotReload) {
+                d_func()->executor->executeJSCall("callFunctionReturnFlushedQueue",
+                                                  QVariantList{"HMRClient",
+                                                               "enable",
+                                                               QVariantList{"desktop",
+                                                                            d->sourceCode->scriptUrl().path().mid(1),
+                                                                            d->sourceCode->scriptUrl().host(),
+                                                                            d->sourceCode->scriptUrl().port(0)}},
+                                                  [=](const QJsonDocument& doc) {
+                                                      qDebug() << "Enabling HMRClient response";
+                                                      processResult(doc);
+                                                  });
+            }
+        } else {
+            d->_jsMessageThread->runOnQueue([=] {
+                d->_reactInstance->loadScriptFromString(
+                    std::make_unique<JSBigStdString>(d->sourceCode->sourceCode().toStdString()),
+                    //":/index.desktop.bundle",
+                    // d->sourceCode->scriptUrl().toString().toStdString(),
+                    "http://localhost:8081/RNTester/js/RNTesterApp.desktop.bundle?platform=desktop&dev=true",
+                    true);
+                setReady(true);
+            });
         }
     });
 }
@@ -534,3 +701,5 @@ void Bridge::applicationScriptDone() {
                                           });
     });
 }
+
+#include "bridge.moc"

@@ -18,12 +18,11 @@ Rectangle {
 
   React.RootView {
     anchors.fill: parent
-    liveReload: ReactNativeProperties.liveReload
 
-    moduleName: "ReactNativeApp"
-    codeLocation: ReactNativeProperties.codeLocation
-    pluginsPath: ReactNativeProperties.pluginsPath
+    moduleName: "RNTesterApp"
+    codeLocation: "http://localhost:8081/RNTester/js/RNTesterApp.desktop.bundle?platform=desktop&dev=true"
     serverConnectionType: ReactNativeProperties.executor
-    externalModules: []
+    //moduleName: "App"
+    //codeLocation: "http://localhost:8081/TouchableImageApp.bundle?platform=desktop&dev=true"
   }
 }

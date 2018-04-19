@@ -21,8 +21,41 @@ find_package(Qt5Qml REQUIRED)
 find_package(Qt5Quick REQUIRED)
 find_package(Qt5WebSockets REQUIRED)
 
+include_directories("../../../ReactCommon")
+include_directories("/home/max/work/webkit/webkit/WebKitBuild/Debug/DerivedSources/ForwardingHeaders")
+include_directories("/home/max/work/react-native-desktop/react-native-desktop/ReactAndroid/src/main/jni/third-party")
+
 set(
   SRC_RUNTIME
+  ../../../ReactCommon/jschelpers/JSCHelpers.cpp
+  ../../../ReactCommon/jschelpers/Unicode.cpp
+  ../../../ReactCommon/jschelpers/Value.cpp
+  ../../../ReactCommon/jschelpers/JSCWrapper.cpp
+  ../../../ReactCommon/jschelpers/systemJSCWrapper.cpp
+
+  ../../../ReactCommon/jsinspector/InspectorInterfaces.cpp
+
+  ../../../ReactCommon/privatedata/PrivateDataBase.cpp
+
+  ../../../ReactCommon/cxxreact/CxxNativeModule.cpp
+  ../../../ReactCommon/cxxreact/Instance.cpp
+  ../../../ReactCommon/cxxreact/JSBigString.cpp
+  ../../../ReactCommon/cxxreact/JSBundleType.cpp
+  ../../../ReactCommon/cxxreact/JSCExecutor.cpp
+  ../../../ReactCommon/cxxreact/JSCLegacyTracing.cpp
+  ../../../ReactCommon/cxxreact/JSCMemory.cpp
+  ../../../ReactCommon/cxxreact/JSCNativeModules.cpp
+  ../../../ReactCommon/cxxreact/JSCPerfStats.cpp
+  ../../../ReactCommon/cxxreact/JSCSamplingProfiler.cpp
+  ../../../ReactCommon/cxxreact/JSCTracing.cpp
+  ../../../ReactCommon/cxxreact/JSCUtils.cpp
+  ../../../ReactCommon/cxxreact/JSIndexedRAMBundle.cpp
+  ../../../ReactCommon/cxxreact/MethodCall.cpp
+  ../../../ReactCommon/cxxreact/ModuleRegistry.cpp
+  ../../../ReactCommon/cxxreact/NativeToJsBridge.cpp
+  ../../../ReactCommon/cxxreact/Platform.cpp
+  ../../../ReactCommon/cxxreact/RAMBundleRegistry.cpp
+
   reactplugin.cpp
   valuecoercion.cpp
   blobprovider.cpp
@@ -122,6 +155,17 @@ endif()
 if (REACT_NATIVE_DESKTOP_EXTERNAL_MODULES_LIBS)
   target_link_libraries(react-native ${REACT_NATIVE_DESKTOP_EXTERNAL_MODULES_LIBS})
 endif()
+
+target_link_libraries(react-native "/home/max/work/webkit/webkit/WebKitBuild/Debug/lib/libJavaScriptCore.a"
+    "/home/max/work/webkit/webkit/WebKitBuild/Debug/lib/libbmalloc.a"
+    "/home/max/work/webkit/webkit/WebKitBuild/Debug/lib/libWTF.a"
+    "-licudata"
+    "-licui18n"
+    "-licuuc"
+    "-lglog"
+    "-ldouble-conversion"
+    "/usr/local/lib/libfolly.a"
+    "/usr/local/lib/libfollybenchmark.a")
 
 include_directories(${REACT_NATIVE_DESKTOP_EXTERNAL_MODULES_INCLUDE_DIRS})
 

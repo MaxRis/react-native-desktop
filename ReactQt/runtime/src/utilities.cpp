@@ -87,4 +87,14 @@ QObject* createQObjectInstance(const QString& typeName) {
     return mObj->newInstance();
 }
 
+folly::dynamic qvariantToDynamic(const QVariant& value) {
+    QJsonDocument doc = QJsonDocument::fromVariant(value);
+    return folly::parseJson(doc.toJson(QJsonDocument::Compact).toStdString());
+}
+
+QVariant dynamicToQVariant(const folly::dynamic& value) {
+    std::string jsonStr = folly::toJson(value);
+    return QJsonDocument::fromJson(jsonStr.c_str()).toVariant();
+}
+
 } // namespace utilities

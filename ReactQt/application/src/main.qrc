@@ -11,6 +11,6 @@
 <RCC>
   <qresource>
     <file>main.qml</file>
-    
+    <file alias="index.desktop.bundle">/home/max/work/react-native-desktop/react-native-desktop/RNTesterApp.desktop.bundle</file>
   </qresource>
 </RCC>

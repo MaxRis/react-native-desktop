@@ -21,6 +21,8 @@ var {
   StyleSheet,
   Text,
   View,
+  Animated,
+  Dimensions
 } = ReactNative;
 
 var RNTesterPage = require('./RNTesterPage');
@@ -64,19 +66,36 @@ var ListViewSimpleExample = createReactClass({
     var rowHash = Math.abs(hashCode(rowData));
     var imgSource = THUMB_URLS[rowHash % THUMB_URLS.length];
     return (
-      <TouchableHighlight onPress={() => {
-          this._pressRow(rowID);
-          highlightRow(sectionID, rowID);
-        }}>
-        <View>
-          <View style={styles.row}>
-            <Image style={styles.thumb} source={imgSource} />
-            <Text style={styles.text}>
-              {rowData + ' - ' + LOREM_IPSUM.substr(0, rowHash % 301 + 10)}
-            </Text>
+      <View>
+        <Animated.View  style={{ height: 25 }}>
+          <View style={{ position: "absolute", width: Dimensions.get("window").width }}>
+            <TouchableHighlight>
+              <View>
+                <View style={{ padding: 12, backgroundColor: "white", borderRadius: 8, paddingTop: 10, paddingBottom: 14 }}>
+                  <View style={{ flexDirection: "column" }}>
+                    <View style={{ flexDirection: "column", width: 260, paddingLeft: 10, paddingRight: 10, alignItems: "flex-start" }}>
+                      <Text>Test</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </TouchableHighlight>
           </View>
-        </View>
+        </Animated.View>
+        <TouchableHighlight onPress={() => {
+            this._pressRow(rowID);
+            highlightRow(sectionID, rowID);
+          }}>
+          <View>
+            <View style={styles.row}>
+              <Image style={styles.thumb} source={imgSource} />
+              <Text style={styles.text}>
+                {rowData + ' - ' + LOREM_IPSUM.substr(0, rowHash % 301 + 10)}
+              </Text>
+            </View>
+          </View>
       </TouchableHighlight>
+      </View>
     );
   },
 

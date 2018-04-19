@@ -100,6 +100,9 @@ public:
 
     void setHotReload(bool value);
 
+    void partialBatchDidFlush();
+    void batchDidComplete();
+
 Q_SIGNALS:
     void readyChanged();
     void jsAppStartedChanged();

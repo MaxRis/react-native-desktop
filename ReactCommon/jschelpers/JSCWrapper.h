@@ -9,9 +9,9 @@
 
 #pragma once
 
+#include <JavaScriptCore/JavaScript.h>
 #include <functional>
 #include <string>
-#include <JavaScriptCore/JavaScript.h>
 
 #if WITH_FBJSCEXTENSIONS
 #include <jsc_stringref.h>
@@ -29,38 +29,35 @@
 
 namespace facebook {
 namespace react {
-  class IInspector;
+class IInspector;
 }
 }
 
-JSC_IMPORT void JSGlobalContextEnableDebugger(
-    JSGlobalContextRef ctx,
-    facebook::react::IInspector &globalInspector,
-    const char *title,
-    const std::function<bool()> &checkIsInspectedRemote);
-JSC_IMPORT void JSGlobalContextDisableDebugger(
-    JSGlobalContextRef ctx,
-    facebook::react::IInspector &globalInspector);
+void JSGlobalContextEnableDebugger(
+    JSGlobalContextRef ctx, facebook::react::IInspector &globalInspector,
+    const char *title, const std::function<bool()> &checkIsInspectedRemote);
+void JSGlobalContextDisableDebugger(
+    JSGlobalContextRef ctx, facebook::react::IInspector &globalInspector);
 
 // This is used to substitute an alternate JSC implementation for
 // testing. These calls must all be ABI compatible with the standard JSC.
-JSC_IMPORT JSValueRef JSEvaluateBytecodeBundle(JSContextRef, JSObjectRef, int, JSStringRef, JSValueRef*);
-JSC_IMPORT bool JSSamplingProfilerEnabled();
-JSC_IMPORT void JSStartSamplingProfilingOnMainJSCThread(JSGlobalContextRef);
-JSC_IMPORT JSValueRef JSPokeSamplingProfiler(JSContextRef);
+JSValueRef JSEvaluateBytecodeBundle(JSContextRef, JSObjectRef, int, JSStringRef,
+                                    JSValueRef *);
+bool JSSamplingProfilerEnabled();
+void JSStartSamplingProfilingOnMainJSCThread(JSGlobalContextRef);
+JSValueRef JSPokeSamplingProfiler(JSContextRef);
 #ifdef __cplusplus
 extern "C" {
 #endif
-JSC_IMPORT void configureJSCForIOS(std::string); // TODO: replace with folly::dynamic once supported
+JSC_IMPORT void configureJSCForIOS(
+    std::string); // TODO: replace with folly::dynamic once supported
 JSC_IMPORT void FBJSContextStartGCTimers(JSContextRef);
 #ifdef __cplusplus
 }
 #endif
 
-#if defined(__APPLE__)
-#import <objc/objc.h>
-#import <JavaScriptCore/JSStringRefCF.h>
-#import <string>
+#include <JavaScriptCore/JSStringRef.h>
+#include <string>
 
 /**
  * JSNoBytecodeFileFormatVersion
@@ -72,7 +69,7 @@ RN_EXPORT extern const int32_t JSNoBytecodeFileFormatVersion;
 namespace facebook {
 namespace react {
 
-#define JSC_WRAPPER_METHOD(m) decltype(&m) m
+#define JSC_WRAPPER_METHOD(m) decltype(&m) m##_
 
 struct JSCWrapper {
   // JSGlobalContext
@@ -91,11 +88,11 @@ struct JSCWrapper {
 
   // JSString
   JSC_WRAPPER_METHOD(JSStringCreateWithUTF8CString);
-  JSC_WRAPPER_METHOD(JSStringCreateWithCFString);
-  #if WITH_FBJSCEXTENSIONS
+// JSC_WRAPPER_METHOD(JSStringCreateWithString);
+#if WITH_FBJSCEXTENSIONS
   JSC_WRAPPER_METHOD(JSStringCreateWithUTF8CStringExpectAscii);
-  #endif
-  JSC_WRAPPER_METHOD(JSStringCopyCFString);
+#endif
+  // JSC_WRAPPER_METHOD(JSStringCopyCFString);
   JSC_WRAPPER_METHOD(JSStringGetCharactersPtr);
   JSC_WRAPPER_METHOD(JSStringGetLength);
   JSC_WRAPPER_METHOD(JSStringGetMaximumUTF8CStringSize);
@@ -157,27 +154,24 @@ struct JSCWrapper {
   JSC_WRAPPER_METHOD(configureJSCForIOS);
 
   // Objective-C API
-  Class JSContext;
-  Class JSValue;
+  // Class JSContext;
+  // Class JSValue;
 
   int32_t JSBytecodeFileFormatVersion;
 };
 
-template <typename T>
-bool isCustomJSCPtr(T *x) {
-  return (uintptr_t)x & 0x1;
-}
+template <typename T> bool isCustomJSCPtr(T *x) { return (uintptr_t)x & 0x1; }
 
 RN_EXPORT bool isCustomJSCWrapperSet();
-RN_EXPORT void setCustomJSCWrapper(const JSCWrapper* wrapper);
+RN_EXPORT void setCustomJSCWrapper(const JSCWrapper *wrapper);
 
 // This will return a single value for the whole life of the process.
 RN_EXPORT const JSCWrapper *systemJSCWrapper();
 RN_EXPORT const JSCWrapper *customJSCWrapper();
+}
+}
 
-} }
-
-#else
+/*
 
 namespace facebook {
 namespace react {
@@ -190,4 +184,4 @@ bool isCustomJSCPtr(T *x) {
 
 } }
 
-#endif
+*/

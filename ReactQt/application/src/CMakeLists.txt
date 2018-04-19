@@ -19,6 +19,8 @@ find_package(Qt5WebSockets REQUIRED)
 # Format EXTERNAL_MODULES to contain array of external modules type names defined as strings
 string (REPLACE ";" "," EXTERNAL_MODULES "${REACT_NATIVE_DESKTOP_EXTERNAL_MODULES_TYPE_NAMES}")
 
+set(JS_BUNDLE_PATH "/home/max/work/react-native-desktop/react-native-desktop/RNTesterApp.desktop.bundle")
+
 if (JS_BUNDLE_PATH)
   set(JS_BUNDLE_RESOURCE "<file alias=\"index.desktop.bundle\">${JS_BUNDLE_PATH}</file>")
 endif()

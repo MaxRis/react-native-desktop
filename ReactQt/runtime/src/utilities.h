@@ -14,6 +14,9 @@
 
 #include <QString>
 #include <QUrl>
+#include <QVariant>
+
+#include "folly/json.h"
 
 class QQuickItem;
 class QQmlEngine;
@@ -24,6 +27,8 @@ void registerReactTypes();
 QString normalizeInputEventName(const QString& eventName);
 QQuickItem* createQMLItemFromSourceFile(QQmlEngine* qmlEngine, const QUrl& fileUrl);
 QObject* createQObjectInstance(const QString& typeName);
+folly::dynamic qvariantToDynamic(const QVariant& value);
+QVariant dynamicToQVariant(const folly::dynamic& value);
 
 } // namespace utilities
 

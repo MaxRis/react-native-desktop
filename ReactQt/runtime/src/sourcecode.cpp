@@ -87,7 +87,7 @@ void SourceCode::setRetryCount(int retryCount) {
 void SourceCode::loadSource(QNetworkAccessManager* nam) {
     Q_D(SourceCode);
 
-    const QString JS_BUNDLE_RESOURCES_PATH = QStringLiteral(":/index.desktop.bundle");
+    const QString JS_BUNDLE_RESOURCES_PATH = QStringLiteral(":/index.desktop.bundle1");
     if (QFile::exists(JS_BUNDLE_RESOURCES_PATH)) {
         QTimer::singleShot(1000, [=]() {
             QFile bundleJS(JS_BUNDLE_RESOURCES_PATH);

@@ -64,6 +64,34 @@ const ComponentExamples: Array<RNTesterExample> = [
   {
     key: 'ViewExample',
     module: require('./ViewExample'),
+  },
+  {
+    key: 'ScrollViewExample',
+    module: require('./ScrollViewExample'),
+  },
+  {
+    key: 'ScrollViewSimpleExample',
+    module: require('./ScrollViewSimpleExample'),
+  },
+  {
+    key: 'ListExampleShared',
+    module: require('./ListExampleShared'),
+  },
+  {
+    key: 'AnimatedExample',
+    module: require('./AnimatedExample'),
+  },
+  {
+    key: 'LayoutAnimationExample',
+    module: require('./LayoutAnimationExample'),
+  },
+  {
+    key: 'NativeAnimationsExample',
+    module: require('./NativeAnimationsExample'),
+  },
+  {
+    key: 'ListViewExample',
+    module: require('./ListViewExample'),
   }
 ];
 

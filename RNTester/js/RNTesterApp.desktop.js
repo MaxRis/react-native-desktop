@@ -61,7 +61,6 @@ class RNTesterApp extends React.Component<Props, RNTesterNavigationState> {
           {openExample: null},
           () => {}
         );
-
     }
 
   _handleBack = () => {
