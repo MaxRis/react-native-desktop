@@ -67,7 +67,6 @@
 #include <QTimer>
 
 void Bridge::partialBatchDidFlush() {}
-
 void Bridge::batchDidComplete() {}
 
 class BridgePrivate {
@@ -179,7 +178,7 @@ void Bridge::setupExecutor() {
 
     if (!d->executor) {
         ServerConnection* conn =
-            qobject_cast<ServerConnection*>(utilities::createQObjectInstance("RemoteServerConnection"));
+            qobject_cast<ServerConnection*>(utilities::createQObjectInstance(d->serverConnectionType));
 
         if (conn == nullptr) {
             qWarning() << __PRETTY_FUNCTION__ << "Could not construct connection: " << d->serverConnectionType

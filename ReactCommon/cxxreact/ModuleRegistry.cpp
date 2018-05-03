@@ -86,14 +86,9 @@ void ModuleRegistry::registerModules(std::vector<std::unique_ptr<NativeModule>> 
 std::vector<std::string> ModuleRegistry::moduleNames() {
   std::vector<std::string> names;
   if (qtModulesUsed_) {
-      for (size_t i = 0; i < qtModules_.size(); i++) {
-        std::string name = normalizeName(qtModules_[i]->name().toStdString());
-        modulesByName_[name] = i;
-        names.push_back(std::move(name));
-      }
-  } else {
-      for (size_t i = 0; i < modules_.size(); i++) {
-        std::string name = normalizeName(modules_[i]->getName());
+      for (size_t i = 0; i < qtModulesUsed_ ? qtModules_.size() : modules_.size(); i++) {
+        std::string name = normalizeName(qtModulesUsed_ ? qtModules_[i]->name().toStdString() :
+                                                          modules_[i]->getName());
         modulesByName_[name] = i;
         names.push_back(std::move(name));
       }
@@ -194,7 +189,6 @@ void ModuleRegistry::callNativeMethod(unsigned int moduleId, unsigned int method
       qDebug() << "ModuleRegistry::callNativeMethod. moduleId: " << moduleId << " methodId: " << methodId
                << " params: " << jsonVariant.toList() << " callId: " << callId;
 
-      //qtModules_[moduleId]->method(methodId)->invoke(jsonVariant.toList());
       QMetaObject::invokeMethod(qtModules_[moduleId]->method(methodId), "invoke", Qt::AutoConnection, Q_ARG(QVariantList, jsonVariant.toList()));
   } else {
       if (moduleId >= modules_.size()) {

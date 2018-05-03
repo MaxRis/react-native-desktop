@@ -18,8 +18,6 @@
 #include <QObject>
 #include <QVariant>
 
-class Bridge;
-
 class IExecutor : public QObject {
     Q_OBJECT
 
