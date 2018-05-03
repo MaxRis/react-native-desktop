@@ -106,8 +106,10 @@ public:
     void batchDidComplete();
 
     void* getJavaScriptContext();
+    void executeOnJavaScriptThread(std::function<void()> func);
 
-    void executeOnJavaScriptThread(std::function<void()>&& func);
+    void loadSource();
+    void initModules();
 
 Q_SIGNALS:
     void readyChanged();
@@ -119,8 +121,6 @@ private Q_SLOTS:
     void applicationScriptDone();
 
 private:
-    void loadSource();
-    void initModules();
     void loadExternalModules(QObjectList* modules);
     void injectModules();
     void processResult(const QJsonDocument& document);
