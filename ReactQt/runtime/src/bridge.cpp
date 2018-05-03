@@ -225,6 +225,20 @@ Bridge::Bridge(QObject* parent) : QObject(parent), d_ptr(new BridgePrivate) {
 
 Bridge::~Bridge() {}
 
+void* Bridge::getJavaScriptContext() {
+    Q_D(Bridge);
+    if (d->_reactInstance.get()) {
+        return d->_reactInstance->getJavaScriptContext();
+    } else {
+        return nullptr;
+    }
+}
+
+void Bridge::executeOnJavaScriptThread(std::function<void()>&& func) {
+    Q_D(Bridge);
+    d->_jsMessageThread->runOnQueue(std::function<void()>(func));
+}
+
 void Bridge::setupExecutor() {
     Q_D(Bridge);
 
@@ -289,17 +303,17 @@ void Bridge::init() {
                 return false;
             }));
 
+        d->_reactInstance.reset(new Instance);
+
         initModules();
         moduleRegistry->registerModules(d->modules.values());
-
-        d->_reactInstance.reset(new Instance);
 
         d->_jsMessageThread->runOnQueue([=] {
             d->_reactInstance->initializeBridge(
                 std::make_unique<RCTInstanceCallback>(this), executorFactory, d->_jsMessageThread, moduleRegistry);
         });
 
-        loadSource();
+        QTimer::singleShot(500, [=]() { loadSource(); });
     }
 }
 

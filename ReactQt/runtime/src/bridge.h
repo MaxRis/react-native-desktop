@@ -18,6 +18,8 @@
 #include <QScopedPointer>
 #include <QUrl>
 
+#include <functional>
+
 class QQuickItem;
 class QQmlEngine;
 class QNetworkAccessManager;
@@ -102,6 +104,10 @@ public:
 
     void partialBatchDidFlush();
     void batchDidComplete();
+
+    void* getJavaScriptContext();
+
+    void executeOnJavaScriptThread(std::function<void()>&& func);
 
 Q_SIGNALS:
     void readyChanged();
