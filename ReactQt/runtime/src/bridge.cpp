@@ -492,6 +492,7 @@ void Bridge::loadExternalModules(QObjectList* modules) {
     if (modules == nullptr)
         return;
 
+    qDebug() << "Bridge::loadExternalModules d->externalModules: " << d->externalModules;
     foreach (QVariant moduleTypeName, d->externalModules) {
         QObject* instance = utilities::createQObjectInstance(moduleTypeName.toString());
         if (!instance) {
@@ -519,6 +520,7 @@ void Bridge::injectModules() {
         moduleConfig.push_back(md->info());
     }
 
+    qDebug() << "remodeModuleConfig: " << moduleConfig;
     d->executor->injectJson("__fbBatchedBridgeConfig", QVariantMap{{"remoteModuleConfig", moduleConfig}});
 }
 
