@@ -17,7 +17,7 @@
 
 class ExecutorPrivate : public QObject {
 public:
-    ExecutorPrivate(Executor* e) : q_ptr(e) {}
+    ExecutorPrivate(Executor* e) : QObject(e), q_ptr(e) {}
 
     virtual ServerConnection* connection();
     void processRequests();
@@ -47,7 +47,7 @@ Executor::Executor(ServerConnection* conn, QObject* parent) : IExecutor(parent),
     d->m_connection = QSharedPointer<ServerConnection>(conn);
     connect(d->connection(), &ServerConnection::dataReady, d, &ExecutorPrivate::readReply);
 
-    d->setupStateMachine();
+    qRegisterMetaType<Executor::ExecuteCallback>();
 }
 
 Executor::~Executor() {
@@ -56,6 +56,9 @@ Executor::~Executor() {
 
 void ExecutorPrivate::setupStateMachine() {
     m_machina = new QStateMachine(this);
+
+    qDebug() << "New parent thread: " << this->thread();
+    qDebug() << "m_machina thread: " << m_machina->thread();
 
     QState* initialState = new QState();
     QState* errorState = new QState();
@@ -107,6 +110,7 @@ ServerConnection* ExecutorPrivate::connection() {
 }
 
 void Executor::init() {
+    d_ptr->setupStateMachine();
     d_ptr->m_machina->start();
 }
 
