@@ -89,6 +89,7 @@ public:
     bool remoteJSDebugging = false;
     bool hotReload = false;
     QVariantList externalModules;
+    QThread executorThread;
 
     bool useJSC = false;
 
@@ -174,12 +175,8 @@ void Bridge::setupExecutor() {
     }
 #endif // JAVASCRIPTCORE_ENABLED
 
-    qDebug() << "Main thread: " << this->thread();
-    QThread* newThread = new QThread();
-    newThread->start();
-    qDebug() << "Executor thread: " << newThread;
-
     if (!d->executor) {
+        d->executorThread.start();
         ServerConnection* conn =
             qobject_cast<ServerConnection*>(utilities::createQObjectInstance(d->serverConnectionType));
 
@@ -190,22 +187,19 @@ void Bridge::setupExecutor() {
         }
 
         d->executor = new Executor(conn);
-
-        conn->moveToThread(newThread);
+        conn->moveToThread(&d->executorThread);
     }
 
     connect(d->executor, SIGNAL(applicationScriptDone()), SLOT(applicationScriptDone()));
-
-    d->executor->moveToThread(newThread);
-
+    d->executor->moveToThread(&d->executorThread);
     QMetaObject::invokeMethod(d_func()->executor, "init", Qt::AutoConnection);
-    // d->executor->init();
 }
 
 void Bridge::resetExecutor() {
     Q_D(Bridge);
 
     if (d->executor) {
+        d->executorThread.quit();
         QMetaObject::invokeMethod(d_func()->executor, "resetConnection", Qt::AutoConnection);
         // d->executor->resetConnection();
         d->executor->deleteLater();
