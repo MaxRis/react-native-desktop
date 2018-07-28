@@ -206,7 +206,8 @@ void Bridge::resetExecutor() {
     Q_D(Bridge);
 
     if (d->executor) {
-        d->executor->resetConnection();
+        QMetaObject::invokeMethod(d_func()->executor, "resetConnection", Qt::AutoConnection);
+        // d->executor->resetConnection();
         d->executor->deleteLater();
         d->executor = nullptr;
         d->useJSC = false;

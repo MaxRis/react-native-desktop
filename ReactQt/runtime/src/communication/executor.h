@@ -34,7 +34,7 @@ public:
     ~Executor();
 
     Q_INVOKABLE virtual void init();
-    virtual void resetConnection();
+    Q_INVOKABLE virtual void resetConnection();
 
     Q_INVOKABLE virtual void injectJson(const QString& name, const QVariant& data);
     Q_INVOKABLE virtual void executeApplicationScript(const QByteArray& script, const QUrl& sourceUrl);
