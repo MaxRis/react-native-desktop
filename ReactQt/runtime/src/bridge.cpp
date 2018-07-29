@@ -598,7 +598,13 @@ void Bridge::processResult(const QJsonDocument& doc) {
     // XXX: this should all really be wrapped up in a Module class
     // including invocations etc
     for (int i = 0; i < moduleIDs.size(); ++i) {
-        invokeModuleMethod(moduleIDs[i].toInt(), methodIDs[i].toInt(), paramArrays[i].toList());
+        QMetaObject::invokeMethod(this,
+                                  "invokeModuleMethod",
+                                  Qt::AutoConnection,
+                                  Q_ARG(int, moduleIDs[i].toInt()),
+                                  Q_ARG(int, methodIDs[i].toInt()),
+                                  Q_ARG(QList<QVariant>, paramArrays[i].toList()));
+        // invokeModuleMethod(moduleIDs[i].toInt(), methodIDs[i].toInt(), paramArrays[i].toList());
     }
 }
 

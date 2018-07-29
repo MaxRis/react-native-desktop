@@ -68,24 +68,24 @@ void ModuleMethod::invoke(const QVariantList& args) {
 
     switch (argsm.size()) {
     case 0:
-        m_metaMethod.invoke(target, Qt::AutoConnection);
+        m_metaMethod.invoke(target, Qt::DirectConnection);
         break;
     case 1:
-        m_metaMethod.invoke(target, Qt::AutoConnection, _R_ARG(pa.at(0)));
+        m_metaMethod.invoke(target, Qt::DirectConnection, _R_ARG(pa.at(0)));
         break;
     case 2:
-        m_metaMethod.invoke(target, Qt::AutoConnection, _R_ARG(pa.at(0)), _R_ARG(pa.at(1)));
+        m_metaMethod.invoke(target, Qt::DirectConnection, _R_ARG(pa.at(0)), _R_ARG(pa.at(1)));
         break;
     case 3:
-        m_metaMethod.invoke(target, Qt::AutoConnection, _R_ARG(pa.at(0)), _R_ARG(pa.at(1)), _R_ARG(pa.at(2)));
+        m_metaMethod.invoke(target, Qt::DirectConnection, _R_ARG(pa.at(0)), _R_ARG(pa.at(1)), _R_ARG(pa.at(2)));
         break;
     case 4:
         m_metaMethod.invoke(
-            target, Qt::AutoConnection, _R_ARG(pa.at(0)), _R_ARG(pa.at(1)), _R_ARG(pa.at(2)), _R_ARG(pa.at(3)));
+            target, Qt::DirectConnection, _R_ARG(pa.at(0)), _R_ARG(pa.at(1)), _R_ARG(pa.at(2)), _R_ARG(pa.at(3)));
         break;
     case 5:
         m_metaMethod.invoke(target,
-                            Qt::AutoConnection,
+                            Qt::DirectConnection,
                             _R_ARG(pa.at(0)),
                             _R_ARG(pa.at(1)),
                             _R_ARG(pa.at(2)),
@@ -94,7 +94,7 @@ void ModuleMethod::invoke(const QVariantList& args) {
         break;
     case 6:
         m_metaMethod.invoke(target,
-                            Qt::AutoConnection,
+                            Qt::DirectConnection,
                             _R_ARG(pa.at(0)),
                             _R_ARG(pa.at(1)),
                             _R_ARG(pa.at(2)),
@@ -104,7 +104,7 @@ void ModuleMethod::invoke(const QVariantList& args) {
         break;
     case 7:
         m_metaMethod.invoke(target,
-                            Qt::AutoConnection,
+                            Qt::DirectConnection,
                             _R_ARG(pa.at(0)),
                             _R_ARG(pa.at(1)),
                             _R_ARG(pa.at(2)),
@@ -115,7 +115,7 @@ void ModuleMethod::invoke(const QVariantList& args) {
         break;
     case 8:
         m_metaMethod.invoke(target,
-                            Qt::AutoConnection,
+                            Qt::DirectConnection,
                             _R_ARG(pa.at(0)),
                             _R_ARG(pa.at(1)),
                             _R_ARG(pa.at(2)),
@@ -127,7 +127,7 @@ void ModuleMethod::invoke(const QVariantList& args) {
         break;
     case 9:
         m_metaMethod.invoke(target,
-                            Qt::AutoConnection,
+                            Qt::DirectConnection,
                             _R_ARG(pa.at(0)),
                             _R_ARG(pa.at(1)),
                             _R_ARG(pa.at(2)),
