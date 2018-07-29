@@ -23,6 +23,10 @@ void ReactTestCase::initTestCase() {
     clickDelayTimer = new QTimer(this);
     clickDelayTimer->setSingleShot(true);
     clickDelayTimer->setInterval(CLICK_TIMER_DELAY);
+
+    initDelayTimer = new QTimer(this);
+    initDelayTimer->setSingleShot(true);
+    initDelayTimer->setInterval(INIT_TIMER_DELAY);
 }
 
 void ReactTestCase::cleanupTestCase() {
@@ -33,10 +37,8 @@ void ReactTestCase::cleanupTestCase() {
 }
 
 void ReactTestCase::init() {
-    clickDelayTimer->setInterval(4000);
-    clickDelayTimer->start();
-    waitAndVerifyCondition([=]() { return !clickDelayTimer->isActive(); }, "Timer timeout was not triggered");
-    clickDelayTimer->setInterval(CLICK_TIMER_DELAY);
+    initDelayTimer->start();
+    waitAndVerifyCondition([=]() { return !initDelayTimer->isActive(); }, "Timer timeout was not triggered");
 }
 
 void ReactTestCase::cleanup() {

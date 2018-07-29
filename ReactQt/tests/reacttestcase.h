@@ -66,8 +66,10 @@ private:
 
 protected:
     QTimer* clickDelayTimer = nullptr;
+    QTimer* initDelayTimer = nullptr;
 
     const int CLICK_TIMER_DELAY = 1000;
+    const int INIT_TIMER_DELAY = 4000;
 };
 
 #endif // REACTTESTCASE_H
