@@ -57,9 +57,6 @@ Executor::~Executor() {
 void ExecutorPrivate::setupStateMachine() {
     m_machina = new QStateMachine(this);
 
-    qDebug() << "New parent thread: " << this->thread();
-    qDebug() << "m_machina thread: " << m_machina->thread();
-
     QState* initialState = new QState();
     QState* errorState = new QState();
     QState* readyState = new QState();

@@ -201,7 +201,6 @@ void Bridge::resetExecutor() {
     if (d->executor) {
         d->executorThread.quit();
         QMetaObject::invokeMethod(d_func()->executor, "resetConnection", Qt::AutoConnection);
-        // d->executor->resetConnection();
         d->executor->deleteLater();
         d->executor = nullptr;
         d->useJSC = false;
@@ -259,10 +258,6 @@ void Bridge::enqueueJSCall(const QString& module, const QString& method, const Q
         Q_ARG(const QString&, "callFunctionReturnFlushedQueue"),
         Q_ARG(const QVariantList&, list),
         Q_ARG(const Executor::ExecuteCallback&, [=](const QJsonDocument& doc) { processResult(doc); }));
-
-    // d_func()->executor->executeJSCall("callFunctionReturnFlushedQueue",
-    //                                  QVariantList{module, method, args},
-    //                                  [=](const QJsonDocument& doc) { processResult(doc); });
 }
 
 void Bridge::invokePromiseCallback(double callbackCode, const QVariantList& args) {
@@ -276,10 +271,6 @@ void Bridge::invokePromiseCallback(double callbackCode, const QVariantList& args
         Q_ARG(const QString&, "invokeCallbackAndReturnFlushedQueue"),
         Q_ARG(const QVariantList&, list),
         Q_ARG(const Executor::ExecuteCallback&, [=](const QJsonDocument& doc) { processResult(doc); }));
-
-    // d_func()->executor->executeJSCall("invokeCallbackAndReturnFlushedQueue",
-    //                                  QVariantList{callbackCode, args},
-    //                                  [=](const QJsonDocument& doc) { processResult(doc); });
 }
 
 void Bridge::invokeAndProcess(const QString& method, const QVariantList& args) {
@@ -292,8 +283,6 @@ void Bridge::invokeAndProcess(const QString& method, const QVariantList& args) {
         Q_ARG(const QString&, method),
         Q_ARG(const QVariantList&, args),
         Q_ARG(const Executor::ExecuteCallback&, [=](const QJsonDocument& doc) { processResult(doc); }));
-
-    // d_func()->executor->executeJSCall(method, args, [=](const QJsonDocument& doc) { processResult(doc); });
 }
 
 void Bridge::executeSourceCode(const QByteArray& sourceCode) {
@@ -314,13 +303,6 @@ void Bridge::enqueueRunAppCall(const QVariantList& args) {
                                   processResult(doc);
                                   setJsAppStarted(true);
                               }));
-
-    // d_func()->executor->executeJSCall("callFunctionReturnFlushedQueue",
-    //                                  QVariantList{"AppRegistry", "runApplication", args},
-    //                                  [=](const QJsonDocument& doc) {
-    //                                      processResult(doc);
-    //                                      setJsAppStarted(true);
-    //                                  });
 }
 
 bool Bridge::ready() const {
@@ -479,7 +461,6 @@ void Bridge::sourcesFinished() {
                                   Qt::AutoConnection,
                                   Q_ARG(QByteArray, d->sourceCode->sourceCode()),
                                   Q_ARG(QUrl, d->bundleUrl));
-        // d->executor->executeApplicationScript(d->sourceCode->sourceCode(), d->bundleUrl);
         if (d_func()->hotReload) {
             d_func()->executor->executeJSCall("callFunctionReturnFlushedQueue",
                                               QVariantList{"HMRClient",
@@ -595,8 +576,6 @@ void Bridge::injectModules() {
                               Qt::AutoConnection,
                               Q_ARG(const QString&, "__fbBatchedBridgeConfig"),
                               Q_ARG(const QVariant&, remoteConfig));
-
-    // d->executor->injectJson("__fbBatchedBridgeConfig", QVariantMap{{"remoteModuleConfig", moduleConfig}});
 }
 
 void Bridge::processResult(const QJsonDocument& doc) {
@@ -655,11 +634,6 @@ void Bridge::applicationScriptDone() {
                                       processResult(doc);
                                       setReady(true);
                                   }));
-
-        // d_func()->executor->executeJSCall("flushedQueue", QVariantList{}, [=](const QJsonDocument& doc) {
-        //    processResult(doc);
-        //    setReady(true);
-        //});
     });
 }
 
